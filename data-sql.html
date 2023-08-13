@@ -1,0 +1,423 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>SQL Portfolio Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/viz.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+        <script src="main.js" defer></script>
+    </head>
+	<body>
+        <header id="header">
+            
+            <nav>
+                <ul>
+                    <li><a href="index.html">Back to Home</a></li>
+                </ul>
+            </nav>
+        </header>
+        <h1>SQL Projects</h1>
+        <div class = "accordion">
+            <div class = "accordion-item">
+                <div class = "accordion-item-header">
+                    Usage Funnel (Codecademy Project)
+                </div>
+                <div class = "accordion-item-body">
+                    <div class="accordion-item-body-content">
+                        This project analyzes the different <strong>Warby Parker</strong>'s Marketing Funnel in order to calculate conversion rates. 
+                        Warby Parker is a transformative lifestyle brand with a lofty objective: to offer designer eyewear at a revolutionary price while leading the way for socially conscious businesses. Founded in 2010 and named after two characters in an early Jack Kerouac journal, Warby Parker believes in creative thinking, smart design, and doing good in the world. For every pair of eyeglasses and sunglasses sold, a pair is distributed to someone in need. <br><br>
+                        
+                        To help users find their perfect frame, Warby Parker has a Style Quiz that has the following questions: </br> </br>
+                        <ol>
+                            <li>What are you looking for?</li> 
+                            <li>What's your fit?</li>
+                            <li>Which shapes do you like?</li>
+                            <li>Which colors do you like?</li>
+                            <li>When was your last eye exam?</li>
+                        </ol> </br>
+                        This is what our table looks like.
+                        <img src="images/sql-1.png">
+                        <br><br><br>
+                        Users will “give up” at different points in the survey.Let’s analyze how many users move from Question 1 to Question 2, etc.
+                        Create a quiz funnel using the GROUP BY command.<br><br>
+                        <em>What is the number of responses for each question?</em><br>
+                        Let's use this query. <br>
+                        <br>
+                        <div class = "accordion-item-body-content-code">
+                            SELECT question, <br>
+                            COUNT(DISTINCT user_id)<br>
+                            FROM survey<br>
+                            GROUP BY question;<br>
+                        </div>
+                        <br>
+                        We then get this result,
+                        <br>
+                        <img src="images/sql-2.png">
+                        <br>
+                        As we can see, out of <strong>500</strong> users who started the survey, only <strong>270</strong> people actually completed the survey. <br><br>
+                        <br>
+                        Using a spreadsheet program like Excel or Google Sheets, let's calculate the percentage of users who answer each question:<br><br>
+                        <ol>
+                            <li>Which question(s) of the quiz have a lower completion rates?</li> 
+                            <li>What do you think is the reason?</li>
+                        </ol></br>
+                        <img src="images/percentage.png">
+                        <br>
+                        The 5th question has the lowest servey answers. The reason could be because they forgot their last exam or did not have an eye exam prior to purchase.
+                        <br><br>
+                        <br>
+                            Warby Parker's purchase funnel is:<br>
+                            <em>Take the Style Quiz → Home Try-On → Purchase the Perfect Pair of Glasses</em><br>
+                            During the Home Try-On stage, we will be conducting an A/B Test:
+                            <ul>
+                                <li>50% of the users will get 3 pairs to try on</li>
+                                <li>50% of the users will get 5 pairs to try on</li>
+                            </ul>
+                            <br>
+                            Let's find out whether or not users who get more pairs to try on at home will be more likely to make a purchase.<br><br>
+                            Let's run this query.<br><br>
+                            <div class = "accordion-item-body-content-code">
+                                SELECT DISTINCT quiz.user_id, <br>
+                                h.number_of_pairs IS NOT NULL AS 'is_home_try_on',<br>
+                                h.number_of_pairs, p.user_id IS NOT NULL AS 'is_purchase'<br>
+                                FROM quiz<br>
+                                LEFT JOIN home_try_on AS 'h'<br>
+                                ON quiz.user_id = h.user_id<br>
+                                LEFT JOIN purchase AS 'p'<br>
+                                ON h.user_id = p.user_id<br>
+                                LIMIT 10;<br>
+                            </div><br>
+                            And we get this result, <br><br>
+                            <img src="images/sqll-3.png">
+                            <br><br>
+                            Now that we have this data, we can now analyze whether or not users who get more pairs to try on at home will be more likely to make a purchase.<br><br>
+                            Let's run another query.<br>
+                            <br>
+                            <div class = "accordion-item-body-content-code">
+                                WITH funnel AS (SELECT DISTINCT quiz.user_id, <br>
+                                    h.number_of_pairs IS NOT NULL AS 'is_home_try_on',<br>
+                                    h.number_of_pairs, <br>
+                                    p.user_id IS NOT NULL AS 'is_purchase'<br>
+                                    FROM quiz<br>
+                                    LEFT JOIN home_try_on AS 'h'<br>
+                                    ON quiz.user_id = h.user_id<br>
+                                    LEFT JOIN purchase AS 'p'<br>
+                                    ON h.user_id = p.user_id)<br>
+                                    <br>
+                                    SELECT funnel.number_of_pairs,<br>
+                                    SUM(is_home_try_on) AS 'num_of_home_try_on',<br>
+                                    SUM(is_purchase) AS 'num_of_purchase',<br>
+                                    1.0 * SUM(is_purchase)/SUM(is_home_try_on) AS 'Conversion Rate'<br>
+                                    FROM funnel<br>
+                                    WHERE funnel.number_of_pairs IS NOT NULL<br>
+                                    GROUP BY 1;<br>
+                            </div><br>
+                            This gives us this result.
+                            <br><br>
+                            <img src="images/sql-3.png">
+                            <br><br>
+                            The results show that users who have 5 pairs of home try on are more likely to purchase with purchase percentage of 79% compared to 3 pairs with only 53%. <br><br>
+                            <br>
+                            Let's find out which style and model is the most purchased.
+                            <br>
+                            <div class = "accordion-item-body-content-code">
+                                SELECT style, COUNT(*)<br>
+                                FROM purchase<br>
+                                GROUP BY 1;<br>
+                                <br>
+                                SELECT style, model_name, COUNT(*)<br>
+                                FROM purchase<br>
+                                GROUP BY 2<br>
+                                ORDER BY 3 DESC;<br>
+                            </div>
+                            <br>
+                            <img src="images/sql-4.png"><br>
+                            <strong>Women's Styles</strong> has the most number of purchase totaling <em>252</em>, although it is not that much difference compared to <strong>Men's Style</strong> with <em>243</em> total purchase.<br><br>
+                            <img src="images/sql-5.png"><br>
+                            <strong>Eugene Narrow</strong> and <strong>Dawes</strong> has the most number of purchase for Women's and Men's style, respectively.
+                            <br>
+                        <a href="https://github.com/marielrebutar/SQL-portfolioproject/blob/c19d7a3e087969b1b1931662b80f82aba87a6c6f/SQL-Usage-Funnel" class="button" target="_blank">Show Entire Code</a>
+                    </div>
+                </div>
+            </div>
+            <div class = "accordion-item">
+                <div class = "accordion-item-header">
+                    User Churn (Codecademy Project)
+                </div>
+                <div class = "accordion-item-body">
+                    <div class="accordion-item-body-content">
+                        <strong>Codeflix,</strong> a streaming video startup, is interested in measuring their user churn rate. In this project, we'll be helping them answer these questions about their churn: <br><br>
+                        <ol>
+                            <li>How many months has the company been operating? </li> 
+                            <li>Which months do you have enough information to calculate a churn rate?</li>
+                            <li>What segments of users exist?</li>
+                            <li>What is the overall churn trend since the company started?</li>
+                            <li>Which segment of users should the company focus on expanding?</li>
+                        </ol><br>
+                        First, let's determine the range of months of data provided.<br><br>
+                        Let's run this query.<br><br>
+                        <div class = "accordion-item-body-content-code">
+                            SELECT MIN(subscription_start), MAX(subscription_end)<br>
+                            FROM subscriptions;
+                        </div>
+                        <br>
+                        We'll be calculating the churn rate for both segments (87 and 30) over the first 3 months of 2017 (we can't calculate it for December, since there are no subscription_end values yet).
+                        <br><br>
+                        <img src="images/sql-6.png">
+                        <br><br>
+                        To get started, create a temporary table of months.
+                        <br><br>
+                        <div class = "accordion-item-body-content-code">
+                            WITH months AS (<br>
+                            SELECT<br>
+                            '2017-01-01' AS first_day,<br>
+                            '2017-01-31' AS last_day<br>
+                            UNION<br>
+                            SELECT<br>
+                            '2017-02-01' AS first_day,<br>
+                            '2017-02-29' AS last_day<br>
+                            UNION<br>
+                            SELECT<br>
+                            '2017-03-01' AS first_day,<br>
+                            '2017-03-31' AS last_day<br>
+                            )<br>
+                            <br>
+                            SELECT *<br>
+                            FROM months;
+                        </div>
+                        <br>
+                        This is what our temporary table looks like.
+                        <br><br>
+                        <img src="images/sql-7.png">
+                        <br><br>
+                        We will then join this with our existing table <em>subscriptions</em>.<br><br>
+                        <div class = "accordion-item-body-content-code">
+                            WITH months AS (<br>
+                            ...<br>
+                            ),<br><br>
+
+                            cross_join AS (<br>
+                            SELECT *<br>
+                            FROM subscriptions<br>
+                            CROSS JOIN months<br>
+                            )<br>
+                            <br>
+                            SELECT *<br>
+                            FROM cross_join<br>
+                            LIMIT 5;<br>
+                        </div>
+                        <br>
+                        This is the joined table looks like. The <em>subscriptions</em> table on the left, two more columns added for the <em>months</em>.
+                        <br><br>
+                        <img src="images/sql-8.png">
+                        <br><br>
+                        Let's check the active users for segments <strong>87</strong> and <strong>30</strong> by creating another temporary table. We'll also create one for cancelled subscriptions for both segment.<br><br>
+                        <div class = "accordion-item-body-content-code">
+                            WITH months AS (<br>
+                                ...<br>
+                            ),<br><br>
+                              
+                              cross_join AS (<br>
+                                ...<br>
+                                ),<br><br>
+                              
+                              status AS (<br>
+                                SELECT id, <br>
+                                first_day AS month,<br>
+                              CASE<br>
+                                WHEN (segment = 87 <br>
+                                AND (subscription_start < first_day)<br>
+                                AND(subscription_end > first_day <br>
+                                    OR subscription_end IS NULL)<br>
+                                    ) THEN 1<br>
+                                ELSE 0<br>
+                                END AS is_active_87,<br>
+                              CASE<br>
+                                WHEN (segment = 30 <br>
+                                AND (subscription_start < first_day)<br>
+                                AND(subscription_end > first_day <br>
+                                    OR subscription_end IS NULL)<br>
+                                    ) THEN 1<br>
+                                ELSE 0<br>
+                                END AS is_active_30,<br>
+                              CASE<br>
+                                WHEN (segment = 87<br>
+                                AND (subscription_end BETWEEN first_day <br>
+                                AND last_day)) THEN 1<br>
+                                ELSE 0<br>
+                                END AS is_canceled_87,<br>
+                              CASE<br>
+                                WHEN (segment = 30<br>
+                                AND (subscription_end BETWEEN first_day <br>
+                                AND last_day)) THEN 1<br>
+                                ELSE 0<br>
+                                END AS is_canceled_30<br>
+                              FROM cross_join <br>
+                              )<br><br>
+                              
+                              SELECT *<br>
+                              FROM status<br>
+                              LIMIT 5;    <br>                          
+                        </div>
+                        <br>
+                        Here's the result for this query,
+                        <br><br>
+                        <img src="images/sql-9.png">
+                        <br><br>
+                        <em>0</em> means <em>false</em> AND <em>1</em> means <em>true</em>. This will be useful later in calculating the churn rate.<br><br>
+                        Let's create another temporary table to calculate the <em>SUM</em> of active and canceled subscriptions for each segment, for each month.<br><br>
+                        <div class = "accordion-item-body-content-code">
+                            WITH months AS (
+                                ...
+                            ),<br><br>
+                              
+                              cross_join AS (<br>
+                                ...
+                                ),<br><br>
+                              
+                              status AS (<br>
+                                ...<br>
+                              )<br><br>
+                            status_aggregate AS(<br>
+                            SELECT month,<br>
+                            SUM(is_active_87) AS sum_active_87,<br>
+                            SUM(is_active_30) AS sum_active_30,<br>
+                            SUM(is_canceled_87) AS sum_canceled_87,<br>
+                            SUM(is_canceled_30) AS sum_canceled_30<br>
+                            FROM status<br>
+                            GROUP BY month<br>
+                            )<br>
+                        </div>
+                        <br>
+                        It's now time to find out their churn rates.
+                        <br>
+                        <div class = "accordion-item-body-content-code">
+                            WITH months AS (
+                                ...
+                            ),<br><br>
+                              
+                              cross_join AS (<br>
+                                ...
+                                ),<br><br>
+                              
+                              status AS (<br>
+                                ...<br>
+                              )<br><br>
+
+                            status_aggregate AS(<br>
+                            ...<br>
+                            )<br><br>
+                            SELECT month, <br>
+                            (1.0 * sum_canceled_87 / sum_active_87) <br>
+                            AS churn_rate_87,<br>
+                            (1.0 * sum_canceled_30 / sum_active_30) <br>
+                            AS churn_rate_30<br>
+                            FROM status_aggregate;<br>
+                        </div>
+                        <br>
+                        Here's the result.
+                        <br><br>
+                        <img src="images/sql-10.png">
+                        <br><br>
+                        Segment 30 has the lowest churn rates for the first three months. That means less people are unsubscribing and that is better because that's how we generate sales. We want people to continue their subscription.<br>
+                        <a href="https://github.com/marielrebutar/SQL-portfolioproject/blob/06465eb86ef2d0496ba937f2345caea09b83bdc7/SQL-Churn-Rate" class="button" target="_blank">Show Entire Code</a>
+                    </div>
+
+                </div>
+            </div>
+            <div class = "accordion-item">
+                <div class = "accordion-item-header">
+                    Marketing Attribution (Codecademy Project)
+                </div>
+                <div class = "accordion-item-body">
+                    <div class="accordion-item-body-content">
+                        <strong>CoolTShirts</strong>, an innovative apparel shop, is running a bunch of marketing campaigns. <br>
+                        In this project, we'll be helping them answer these questions about their campaigns: <br><br>
+                        <ol>
+                            <li>How many campaigns and sources does CoolTShirts use and how are they related?</li> 
+                            <li>What pages are on their website?</li>
+                            <li>How many first touches is each campaign responsible for?</li>
+                            <li>How many last touches is each campaign responsible for?</li>
+                            <li>How many last touches on the purchase page is each campaign responsible for?</li>
+                            <li>CoolTShirts can re-invest in 5 campaigns. Which should they pick and why?</li>
+                        </ol>
+                    <br>
+                    Let's first find out how many campaign and sources does CoolShirts use and which source is used for each campaign.<br><br>
+                    Let's run these queries. <br><br>
+                    <div class = "accordion-item-body-content-code">
+                        SELECT COUNT(DISTINCT utm_campaign)<br>
+                        FROM page_visits;<br>
+                        <br>
+                        SELECT COUNT(DISTINCT utm_source)<br>
+                        FROM page_visits;<br>
+                        <br>
+                        SELECT DISTINCT utm_campaign, utm_source<br>
+                        FROM page_visits;<br>
+                    </div>
+                    <br>
+                    This is what we get. There are 8 campaigns and 6 sources.
+                    <br><br>
+                    <img src="images/sql-11.png">
+                    <br><br>
+                    Let's find out how many first touches is each campaign responsible for.<br><br>
+                    Let's run this query.<br><br>
+                    <div class = "accordion-item-body-content-code">
+                        WITH first_touch AS (<br>
+                            SELECT user_id, <br>
+                            MIN(timestamp) AS 'first_touch_at',utm_campaign<br>
+                            FROM page_visits<br>
+                            GROUP BY user_id)<br>
+                            <br>
+                        SELECT first_touch.utm_campaign, COUNT(*)<br>
+                        FROM first_touch<br>
+                        GROUP BY 1
+                        ORDER BY 2 DESC;
+                    </div>
+                    <br>
+                    <em>interview-with-cool-tshirts-founder</em> campaign has the highest first touch but this doesn't mean this same campaign made the users purchase the product. Let's find out more.<br>
+                    <br>
+                    <img src="images/sql-12.png">
+                    <br><br>
+                    Now, let's check the last touches each campaign is responsible for.
+                    We'll use the same query and change <em>first</em> to <em>last.</em><br>
+                    Let's run this query.<br><br>
+                    <div class = "accordion-item-body-content-code">
+                        WITH last_touch AS (<br>
+                        SELECT user_id, <br>
+                        MAX(timestamp) AS 'last_touch_at',utm_campaign<br>
+                        FROM page_visits<br>
+                        GROUP BY user_id)<br>
+                        <br>
+                        SELECT last_touch.utm_campaign, COUNT(*)<br>
+                        FROM last_touch<br>
+                        GROUP BY 1<br>
+                        ORDER BY 2 DESC;
+                    </div>
+                    <br>
+                    <em>weekly-newsletter</em> campaign has more last touches compared to the other campaigns.<br>
+                    <br>
+                    <img src="images/sql-13.png">
+                    <br><br>
+                    Now, let' find out which campaign drives our visitors to purchase.<br>
+                    <br>
+                    We'll just add this in our previous query.<br>
+                    <br>
+                    <div class = "accordion-item-body-content-code">
+                        ...<br>
+                        WHERE page_name = '4 - purchase'<br>
+                        ...<br>
+                    </div>
+                    <br>
+                    <em>weekly-newsletter</em> campaign drives more visitors to purchase our products.<br>
+                    <br>
+                    <img src="images/sql-14.png">
+                    <br><br>
+                    CoolTShirts can re-invest in 5 campaigns. Given our findings in the project, which should they pick and why?<br><br>
+                    <em>CoolTShirt should re-invest in campaigns that generated more sales. On the other hand, it would be helpful if we also study the other campaigns that generated low purchase conversion and see what we can do to improve them.</em><br>
+                    <a href="https://github.com/marielrebutar/SQL-portfolioproject/blob/19d7c6a64458826466d237d0f7c3df370eecc746/SQL-Marketing-Attribution" class="button" target="_blank">Show Entire Code</a>
+                </div>
+            </div>
+        </div>
+	</body>
+</html>
